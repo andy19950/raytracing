@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <time.h>
+#include <pthread.h>
 
 #include "primitives.h"
 #include "raytracing.h"
@@ -49,8 +50,51 @@ int main()
     printf("# Rendering scene\n");
     /* do the ray tracing with the given geometry */
     clock_gettime(CLOCK_REALTIME, &start);
-    raytracing(pixels, background,
-               rectangulars, spheres, lights, &view, ROWS, COLS);
+
+/*----- my code -------*/
+
+int rc;
+//pthread_t *tid = (pthread_t*) malloc(sizeof(pthread_t) * THREAD_NUM);
+pthread_t tid[THREAD_NUM];
+//pthread_attr_t attr;
+
+//pthread_attr_init(&attr);
+//pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+
+
+for(int j=0; j<THREAD_NUM; j++){
+	
+
+input *box = (input*) malloc (sizeof(input));
+box->pixels = pixels;
+COPY_COLOR(box->background_color,background);
+box->rectangulars = rectangulars;
+box->spheres = spheres;
+box->lights = lights;
+box->view = &view;
+box->width = ROWS;
+box->height = COLS;
+
+
+	box->j = j * (COLS / THREAD_NUM);
+  	rc = pthread_create(&tid[j], NULL, raytracing, (void*) box);
+  	if (rc) {              
+    		printf("ERROR; return code from pthread_create() is %d\n", rc);
+    		exit(-1);
+   	 }
+}
+for(int j=0; j<THREAD_NUM; j++){	
+	rc = pthread_join(tid[j], NULL);
+  	if (rc) {
+    		printf("ERROR; return code from pthread_join() is %d\n", rc);
+    	exit(-1);
+    }
+}
+
+/*--------------------*/
+
+//    raytracing(pixels, background,
+//               rectangulars, spheres, lights, &view, ROWS, COLS);
     clock_gettime(CLOCK_REALTIME, &end);
     {
         FILE *outfile = fopen(OUT_FILENAME, "wb");
@@ -64,5 +108,6 @@ int main()
     free(pixels);
     printf("Done!\n");
     printf("Execution time of raytracing() : %lf sec\n", diff_in_second(start, end));
+    pthread_exit(NULL);
     return 0;
 }

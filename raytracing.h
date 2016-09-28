@@ -4,8 +4,26 @@
 #include "objects.h"
 #include <stdint.h>
 
-void raytracing(uint8_t *pixels, color background_color,
+#define THREAD_NUM 8
+
+typedef struct myStruct{
+
+    uint8_t *pixels;
+    color background_color;
+    rectangular_node rectangulars;
+    sphere_node spheres;
+    light_node lights;
+    const viewpoint *view;
+    int width, height, i, j;
+
+}input;
+
+/*void raytracing(uint8_t *pixels, color background_color,
                 rectangular_node rectangulars, sphere_node spheres,
                 light_node lights, const viewpoint *view,
                 int width, int height);
+*/
+
+void *raytracing(void* box);
+
 #endif

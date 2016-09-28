@@ -453,22 +453,24 @@ static unsigned int ray_color(const point3 e, double t,
 }
 
 /* @param background_color this is not ambient light */
-void raytracing(uint8_t *pixels, color background_color,
+/*void raytracing(uint8_t *pixels, color background_color,
                 rectangular_node rectangulars, sphere_node spheres,
                 light_node lights, const viewpoint *view,
-                int width, int height)
-{
+                int width, int height, int i, int j)*/
+void *raytracing(void* input_box){
+   
+    input *box = (input*) input_box;
     point3 u, v, w, d;
     color object_color = { 0.0, 0.0, 0.0 };
 
     /* calculate u, v, w */
-    calculateBasisVectors(u, v, w, view);
-
+    calculateBasisVectors(u, v, w, box->view);
     idx_stack stk;
-
     int factor = sqrt(SAMPLES);
-    for (int j = 0; j < height; j++) {
-        for (int i = 0; i < width; i++) {
+    
+    for (int j = box->j; j < (box->j + box->height / THREAD_NUM); j++) {
+    //for(int j = box->j; j < box->height; j += THREAD_NUM){
+        for (int i = 0; i < box->width; i++) {
             double r = 0, g = 0, b = 0;
             /* MSAA */
             for (int s = 0; s < SAMPLES; s++) {
@@ -476,23 +478,24 @@ void raytracing(uint8_t *pixels, color background_color,
                 rayConstruction(d, u, v, w,
                                 i * factor + s / factor,
                                 j * factor + s % factor,
-                                view,
-                                width * factor, height * factor);
-                if (ray_color(view->vrp, 0.0, d, &stk, rectangulars, spheres,
-                              lights, object_color,
+                                box->view,
+                                box->width * factor, box->height * factor);
+                if (ray_color(box->view->vrp, 0.0, d, &stk, box->rectangulars, box->spheres,
+                              box->lights, object_color,
                               MAX_REFLECTION_BOUNCES)) {
                     r += object_color[0];
                     g += object_color[1];
                     b += object_color[2];
                 } else {
-                    r += background_color[0];
-                    g += background_color[1];
-                    b += background_color[2];
+                    r += box->background_color[0];
+                    g += box->background_color[1];
+                    b += box->background_color[2];
                 }
-                pixels[((i + (j * width)) * 3) + 0] = r * 255 / SAMPLES;
-                pixels[((i + (j * width)) * 3) + 1] = g * 255 / SAMPLES;
-                pixels[((i + (j * width)) * 3) + 2] = b * 255 / SAMPLES;
+                box->pixels[((i + (j * box->width)) * 3) + 0] = r * 255 / SAMPLES;
+                box->pixels[((i + (j * box->width)) * 3) + 1] = g * 255 / SAMPLES;
+                box->pixels[((i + (j * box->width)) * 3) + 2] = b * 255 / SAMPLES;
             }
         }
     }
+    return NULL;
 }
