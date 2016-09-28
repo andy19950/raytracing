@@ -453,12 +453,9 @@ static unsigned int ray_color(const point3 e, double t,
 }
 
 /* @param background_color this is not ambient light */
-/*void raytracing(uint8_t *pixels, color background_color,
-                rectangular_node rectangulars, sphere_node spheres,
-                light_node lights, const viewpoint *view,
-                int width, int height, int i, int j)*/
-void *raytracing(void* input_box){
-   
+void *raytracing(void* input_box)
+{
+
     input *box = (input*) input_box;
     point3 u, v, w, d;
     color object_color = { 0.0, 0.0, 0.0 };
@@ -467,9 +464,8 @@ void *raytracing(void* input_box){
     calculateBasisVectors(u, v, w, box->view);
     idx_stack stk;
     int factor = sqrt(SAMPLES);
-    
+
     for (int j = box->j; j < (box->j + box->height / THREAD_NUM); j++) {
-    //for(int j = box->j; j < box->height; j += THREAD_NUM){
         for (int i = 0; i < box->width; i++) {
             double r = 0, g = 0, b = 0;
             /* MSAA */

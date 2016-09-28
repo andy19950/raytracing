@@ -51,50 +51,41 @@ int main()
     /* do the ray tracing with the given geometry */
     clock_gettime(CLOCK_REALTIME, &start);
 
-/*----- my code -------*/
+    /*----- my code -------*/
 
-int rc;
-//pthread_t *tid = (pthread_t*) malloc(sizeof(pthread_t) * THREAD_NUM);
-pthread_t tid[THREAD_NUM];
-//pthread_attr_t attr;
+    int rc;
+    pthread_t tid[THREAD_NUM];
 
-//pthread_attr_init(&attr);
-//pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+    for(int j=0; j<THREAD_NUM; j++) {
 
-
-for(int j=0; j<THREAD_NUM; j++){
-	
-
-input *box = (input*) malloc (sizeof(input));
-box->pixels = pixels;
-COPY_COLOR(box->background_color,background);
-box->rectangulars = rectangulars;
-box->spheres = spheres;
-box->lights = lights;
-box->view = &view;
-box->width = ROWS;
-box->height = COLS;
+        input *box = (input*) malloc (sizeof(input));
+        box->pixels = pixels;
+        COPY_COLOR(box->background_color,background);
+        box->rectangulars = rectangulars;
+        box->spheres = spheres;
+        box->lights = lights;
+        box->view = &view;
+        box->width = ROWS;
+        box->height = COLS;
 
 
-	box->j = j * (COLS / THREAD_NUM);
-  	rc = pthread_create(&tid[j], NULL, raytracing, (void*) box);
-  	if (rc) {              
-    		printf("ERROR; return code from pthread_create() is %d\n", rc);
-    		exit(-1);
-   	 }
-}
-for(int j=0; j<THREAD_NUM; j++){	
-	rc = pthread_join(tid[j], NULL);
-  	if (rc) {
-    		printf("ERROR; return code from pthread_join() is %d\n", rc);
-    	exit(-1);
+        box->j = j * (COLS / THREAD_NUM);
+        rc = pthread_create(&tid[j], NULL, raytracing, (void*) box);
+        if (rc) {
+            printf("ERROR; return code from pthread_create() is %d\n", rc);
+            exit(-1);
+        }
     }
-}
+    for(int j=0; j<THREAD_NUM; j++) {
+        rc = pthread_join(tid[j], NULL);
+        if (rc) {
+            printf("ERROR; return code from pthread_join() is %d\n", rc);
+            exit(-1);
+        }
+    }
 
-/*--------------------*/
+    /*--------------------*/
 
-//    raytracing(pixels, background,
-//               rectangulars, spheres, lights, &view, ROWS, COLS);
     clock_gettime(CLOCK_REALTIME, &end);
     {
         FILE *outfile = fopen(OUT_FILENAME, "wb");
