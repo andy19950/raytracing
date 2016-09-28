@@ -4,12 +4,12 @@ all: $(EXEC)
 
 CC ?= gcc
 CFLAGS = \
-	-std=gnu99 -Wall -O0 -g
+	-std=gnu99 -Wall -Ofast -g
 LDFLAGS = \
-	-lm
+	-lm -lpthread
 
 ifeq ($(strip $(PROFILE)),1)
-PROF_FLAGS = -pg
+PROF_FLAGS = -pg 
 CFLAGS += $(PROF_FLAGS)
 LDFLAGS += $(PROF_FLAGS) 
 endif
@@ -41,6 +41,11 @@ use-models.h: models.inc Makefile
 check: $(EXEC)
 	@./$(EXEC) && diff -u baseline.ppm out.ppm || (echo Fail; exit)
 	@echo "Verified OK"
+
+cache-test: $(EXEC) 
+	perf stat --repeat 100 \
+                -e cache-misses,cache-references,branch,instructions,cycles \
+                ./raytracing
 
 clean:
 	$(RM) $(EXEC) $(OBJS) use-models.h \
